@@ -130,7 +130,8 @@ sub GetRepositoryId {
 	return(GetSha1OfFirstCommand());
 }
 sub GetSha1OfFirstCommand {
-	my $result = `git rev-list --reverse master`;
+    my $localBranch = `git describe --all`;
+	my $result = `git rev-list --reverse $localBranch`;
 	my @ids = split(/\n/, $result);
 	return($ids[0]);
 }
