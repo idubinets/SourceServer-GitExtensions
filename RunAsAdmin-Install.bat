@@ -11,6 +11,9 @@ if not %ERRORLEVEL% == 0 echo Copy Failed && exit /b 1
 echo - Copying necessary files '%VS100COMNTOOLS%'...
 xcopy /y %~dp0\InSystemPath\* "%VS100COMNTOOLS%" > NUL
 if not %ERRORLEVEL% == 0 echo Copy Failed && exit /b 1
+echo - Copying necessary files '%VS110COMNTOOLS%'...
+xcopy /y %~dp0\InSystemPath\* "%VS110COMNTOOLS%" > NUL
+if not %ERRORLEVEL% == 0 echo Copy Failed && exit /b 1
 
 echo -------------
 echo All that is left to do is:
