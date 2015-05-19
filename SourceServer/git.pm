@@ -17,6 +17,7 @@ use warnings;
 use Cwd;
 use Cwd 'abs_path';
 use constant FILE_LOOKUP_TABLE => 'FILE_LOOKUP_TABLE';
+use Digest::MD5 qw(md5_hex);
  
 sub new {
     my $proto = shift;
@@ -119,15 +120,19 @@ sub SourceStreamVariables {
 	
 	my $repositoryId  = GetRepositoryId();
 	my $originNode = GetOriginRepository();
+	my $branchName = GetCurrentBranchName();
 	
 	push(@stream, "GIT_REPO_ID=$repositoryId");
 	push(@stream, "GIT_ORIGIN_NODE=$originNode");
 	push(@stream, "GIT_EXTRACT_TARGET=%targ%\\%GIT_REPO_ID%\\%var2%\\%fnfile%(%var1%)");
-    push(@stream, "GIT_EXTRACT_CMD=gitcontents.bat \"%GIT_ORIGIN_NODE%\" \"%targ%\\%GIT_REPO_ID%\\.localRepo\" %var2% \"%git_extract_target%\"");
+	push(@stream, "GIT_BRANCH=$branchName");
+    push(@stream, "GIT_EXTRACT_CMD=gitcontents.bat \"%GIT_ORIGIN_NODE%\" \"%targ%\\%GIT_REPO_ID%\\.localRepo\" %var2% \"%git_extract_target%\" \"%GIT_BRANCH%\"");
     return (@stream);
 }
 sub GetRepositoryId {
-	return(GetSha1OfFirstCommand());
+	my $id = GetSha1OfFirstCommand() . GetCurrentBranchName();
+	$id = md5_hex($id);
+	return($id);
 }
 sub GetSha1OfFirstCommand {
     my $localBranch = `git describe --all`;
@@ -135,6 +140,19 @@ sub GetSha1OfFirstCommand {
 	my @ids = split(/\n/, $result);
 	return($ids[0]);
 }
+
+sub GetCurrentBranchName {
+	my $localBranch = `git describe --all`;
+	
+	
+	$localBranch =~ s/remotes\///g;
+	$localBranch =~ s/origin\///g;
+	$localBranch =~ s/refs\///g;
+	$localBranch =~ s/heads\///g;
+	
+	return($localBranch);
+}
+
 sub GetOriginRepository {
 	foreach my $repositoryToEvaluate(GetRemoteRepositories()) {
 		if ($repositoryToEvaluate =~ m/^origin\s(.*)(\s\(fetch\)){0,1}$/i) {
